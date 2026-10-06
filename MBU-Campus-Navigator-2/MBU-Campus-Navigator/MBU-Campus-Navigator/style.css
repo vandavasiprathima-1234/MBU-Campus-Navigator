@@ -1,0 +1,55 @@
+:root {
+    --bg-primary: #0f172a;
+    --bg-sidebar: #1e293b;
+    --accent: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+}
+body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary); color: var(--text-main); display: flex; overflow: hidden;
+}
+#sidebar {
+    width: 380px; height: 100%; background: var(--bg-sidebar);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    padding: 20px; box-sizing: border-box; overflow-y: auto; gap: 15px; z-index: 1000;
+}
+header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
+.badge { background: #0369a1; padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; font-weight: bold; }
+#map { flex-grow: 1; height: 100%; background: #0b0f19; }
+.card { background: #111827; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.card-accent { border-left: 4px solid var(--accent); }
+h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+.search-box { display: flex; gap: 8px; }
+input, select {
+    flex-grow: 1; background: #1f2937; border: 1px solid var(--border);
+    color: white; padding: 8px; border-radius: 4px; font-size: 0.85rem;
+}
+button {
+    background: var(--accent); color: #0f172a; font-weight: bold;
+    border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;
+}
+button:hover { background: #7dd3fc; }
+.switch-container { display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; cursor: pointer; }
+.xai-box { background: #020617; border-radius: 6px; padding: 10px; font-size: 0.85rem; border: 1px dashed #ef4444; margin: 10px 0; }
+.matrix-box { font-size: 0.8rem; line-height: 1.4; color: #a7f3d0; background: #064e3b; padding: 8px; border-radius: 4px; }
+.hidden { display: none !important; }
+.small-text { font-size: 0.75rem; color: var(--text-muted); margin: 4px 0 0 0; }
+.stat-group { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; }
+.analytics-item { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0; border-bottom: 1px solid #334155; }
+
+/* Authentication Layer Theme */
+.login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.95); z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+}
+.login-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 30px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    text-align: center;
+}
+.login-card h2 { margin: 0 0 5px 0; color: #38bdf8; font-size: 1.6rem; }
+.login-card p { margin: 0; color: #94a3b8; font-size: 0.85rem; }

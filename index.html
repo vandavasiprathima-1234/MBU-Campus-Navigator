@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Campus Horizon AI - MBU Campus Navigator</title>
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        :root {
+            --bg-primary: #f0f4f1;
+            --bg-sidebar: #e2e8e4;
+            --accent: #2e7d32;
+            --accent-hover: #1b5e20;
+            --text-main: #1e291f;
+            --text-muted: #556b56;
+            --border: #cbd5e1;
+
+            --login-bg: #eaf0eb;
+            --login-card-bg: #ffffff;
+            --login-border: #bdcbd3;
+            --login-text: #1b3a24;
+            --login-btn-bg: #2e7d32;
+            --login-btn-hover: #1b5e20;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+        html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+        /* =========================
+           LOGIN
+        ========================= */
+
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+
+            background: var(--login-bg);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            z-index: 9999;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+
+            padding: 30px;
+
+            background: var(--login-card-bg);
+
+            border: 1px solid var(--login-border);
+            border-radius: 14px;
+
+            box-shadow:
+                0 15px 35px rgba(0, 0, 0, 0.08),
+                0 5px 15px rgba(46, 125, 50, 0.08);
+
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 140px;
+            height: 140px;
+
+            margin: 0 auto 12px;
+
+            display: block;
+
+            object-fit: contain;
+            object-position: center;
+        }
+
+        .login-logo-fallback {
+            width: 110px;
+            height: 110px;
+
+            margin: 0 auto 12px;
+
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+
+            align-items: center;
+            justify-content: center;
+
+            color: var(--accent);
+            background: #f4faf5;
+
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .login-logo-name {
+            margin: 0 0 15px;
+
+            color: var(--login-text);
+
+            font-size: 0.75rem;
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .login-card h2 {
+            margin: 0 0 20px;
+
+            color: var(--login-text);
+
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: var(--text-muted);
+
+            font-size: 0.75rem;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .login-input {
+            width: 100%;
+
+            padding: 12px;
+
+            border: 1px solid var(--login-border);
+            border-radius: 7px;
+
+            background: #f8faf9;
+            color: var(--text-main);
+
+            font-size: 0.9rem;
+
+            outline: none;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            background: #ffffff;
+        }
+
+        .login-btn {
+            width: 100%;
+
+            padding: 13px;
+
+            border: none;
+            border-radius: 7px;
+
+            background: var(--login-btn-bg);
+            color: white;
+
+            font-size: 0.95rem;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--login-btn-hover);
+        }
+
+        .error-banner {
+            display: none;
+
+            margin-bottom: 15px;
+            padding: 10px;
+
+            border: 1px solid #e53935;
+            border-radius: 6px;
+
+            background: #fff5f5;
+            color: #b71c1c;
+
+            font-size: 0.85rem;
+            font-weight: 600;
+
+            text-align: left;
+        }
+
+        .creds-tip {
+            margin-top: 15px;
+            padding: 10px;
+
+            border-radius: 6px;
+
+            background: #f1f5f2;
+
+            color: var(--text-muted);
+
+            font-size: 0.72rem;
+            line-height: 1.5;
+
+            text-align: left;
+        }
+
+        /* =========================
+           MAIN LAYOUT
+        ========================= */
+
+        #sidebar {
+            width: 410px;
+            height: 100%;
+
+            padding: 20px;
+
+            background: var(--bg-sidebar);
+
+            border-right: 1px solid var(--border);
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 15px;
+
+            overflow-y: auto;
+
+            z-index: 1000;
+        }
+
+        #map-container {
+            flex: 1;
+
+            min-width: 0;
+            height: 100%;
+
+            position: relative;
+
+            background: #e5e9f0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+
+            z-index: 1;
+        }
+
+        header h1 {
+            margin: 0;
+
+            color: var(--accent);
+
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .badge {
+            display: inline-block;
+
+            margin-top: 5px;
+
+            padding: 4px 10px;
+
+            border-radius: 4px;
+
+            background: #1565c0;
+            color: #ffffff;
+
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* =========================
+           CARDS
+        ========================= */
+
+        .card {
+            padding: 14px;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-accent {
+            border-left: 4px solid var(--accent);
+        }
+
+        h3 {
+            margin: 0 0 10px;
+
+            color: var(--text-main);
+
+            font-size: 0.9rem;
+            font-weight: 800;
+
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+
+            gap: 10px;
+        }
+
+        .route-endpoint {
+            margin-top: 12px;
+            padding-top: 10px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .route-endpoint h4 {
+            margin: 0 0 7px;
+
+            color: var(--accent);
+
+            font-size: 0.78rem;
+
+            text-transform: uppercase;
+        }
+
+        .route-selects {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 6px;
+        }
+
+        select {
+            width: 100%;
+
+            padding: 9px;
+
+            border: 1px solid var(--border);
+            border-radius: 6px;
+
+            background: #f8faf9;
+
+            color: var(--text-main);
+
+            font-size: 0.82rem;
+
+            outline: none;
+        }
+
+        select:focus {
+            border-color: var(--accent);
+        }
+
+        .switch-container {
+            display: block;
+
+            margin-top: 8px;
+
+            color: var(--text-main);
+
+            font-size: 0.85rem;
+            font-weight: 500;
+
+            cursor: pointer;
+        }
+
+        .search-error {
+            min-height: 18px;
+
+            margin: 4px 0 0;
+
+            color: #b71c1c;
+
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .small-text {
+            margin: 5px 0 0;
+
+            color: var(--text-muted);
+
+            font-size: 0.75rem;
+        }
+
+        /* =========================
+           DIRECTORY
+        ========================= */
+
+        .block-directory {
+            display: grid;
+
+            gap: 8px;
+
+            max-height: 300px;
+
+            overflow-y: auto;
+        }
+
+        .block-entry {
+            padding-top: 8px;
+
+            border-top: 1px solid var(--border);
+
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        .block-entry strong {
+            display: block;
+
+            color: var(--accent);
+
+            font-size: 0.8rem;
+        }
+
+        .block-entry span {
+            color: var(--text-muted);
+        }
+
+        .directory-count {
+            margin: 0 0 8px;
+
+            color: var(--text-muted);
+
+            font-size: 0.75rem;
+        }
+
+        .directory-list {
+            max-height: 260px;
+
+            margin: 0;
+            padding: 0;
+
+            overflow-y: auto;
+
+            list-style: none;
+        }
+
+        .directory-item {
+            padding: 8px 0;
+
+            border-top: 1px solid var(--border);
+
+            font-size: 0.78rem;
+
+            cursor: pointer;
+        }
+
+        .directory-item strong {
+            display: block;
+
+            color: var(--accent);
+
+            font-size: 0.72rem;
+            text-transform: uppercase;
+        }
+
+        /* =========================
+           MAP CONTROLS
+        ========================= */
+
+        .map-style-toggle {
+            position: absolute;
+
+            bottom: 20px;
+            right: 20px;
+
+            z-index: 1000;
+
+            display: flex;
+            gap: 5px;
+
+            padding: 8px;
+
+            background: white;
+
+            border: 1px solid var(--border);
+            border-radius: 6px;
+
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .style-btn {
+            padding: 6px 12px;
+
+            border: none;
+            border-radius: 4px;
+
+            background: #f1f5f9;
+
+            color: var(--text-main);
+
+            font-size: 0.75rem;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .style-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .map-layers {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 7px;
+        }
+
+        .layer-toggle {
+            display: flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 6px;
+
+            border: 1px solid var(--border);
+            border-radius: 5px;
+
+            background: #f8faf9;
+
+            font-size: 0.76rem;
+
+            cursor: pointer;
+        }
+
+        .layer-toggle input {
+            accent-color: var(--accent);
+        }
+
+        .location-action {
+            width: 100%;
+
+            margin-top: 8px;
+            padding: 9px;
+
+            border: none;
+            border-radius: 6px;
+
+            background: #1565c0;
+            color: #ffffff;
+
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .location-action:hover {
+            background: #0d47a1;
+        }
+
+        .xai-box {
+            margin: 10px 0;
+
+            padding: 12px;
+
+            border: 1px dashed #e53935;
+            border-radius: 6px;
+
+            background: #fff5f5;
+            color: #b71c1c;
+
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .matrix-box {
+            padding: 12px;
+
+            border: 1px solid #a5d6a7;
+            border-radius: 6px;
+
+            background: #e8f5e9;
+            color: #1b5e20;
+
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .directions-list {
+            margin: 10px 0 0;
+
+            padding-left: 22px;
+
+            color: var(--text-main);
+
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .directions-list li {
+            margin-bottom: 7px;
+        }
+
+        .stat-group {
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+
+            font-size: 0.85rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* =========================
+           MAP MARKERS
+        ========================= */
+
+        .location-badge {
+            width: 28px;
+            height: 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background: white;
+
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+
+            font-size: 1rem;
+        }
+
+        .location-label {
+            padding: 4px 6px;
+
+            border: 1px solid #2e7d32;
+            border-radius: 4px;
+
+            background: white;
+
+            color: #1b5e20;
+
+            font-size: 0.72rem;
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+        .route-point {
+            width: 30px;
+            height: 30px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            font-size: 0.95rem;
+            font-weight: 800;
+
+            box-shadow: 0 2px 7px rgba(0, 0, 0, 0.3);
+        }
+
+        .route-start {
+            background: #1565c0;
+        }
+
+        .route-destination {
+            background: #c62828;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: 48%;
+            }
+
+            #map-container {
+                height: 52%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         LOGIN SCREEN
+    ====================================================== -->
+
+    <div id="loginOverlay">
+
+        <div class="login-card">
+
+            <!-- MBU LOGO -->
+            <img
+                src="./assets/Logo.MBU.webp"
+                alt="Mohan Babu University Logo"
+                class="login-logo"
+                onerror="
+                    this.style.display='none';
+                    document.getElementById('logoFallback').style.display='flex';
+                "
+            >
+
+            <!-- LOGO FALLBACK -->
+            <div
+                id="logoFallback"
+                class="login-logo-fallback"
+                style="display:none;"
+            >
+                MBU
+            </div>
+
+            <p class="login-logo-name">
+                Mohan Babu University
+            </p>
+
+            <h2>
+                CAMPUS HORIZON
+            </h2>
+
+            <div
+                id="loginErrorMsg"
+                class="error-banner"
+            ></div>
+
+            <!-- ROLE -->
+            <div class="input-group">
+
+                <label for="userRole">
+                    System Access Role
+                </label>
+
+                <select
+                    id="userRole"
+                    class="login-input"
+                >
+                    <option value="parent">
+                        Parent
+                    </option>
+
+                    <option value="student">
+                        Student
+                    </option>
+
+                    <option value="faculty">
+                        Faculty Member
+                    </option>
+
+                    <option value="visitor">
+                        Campus Visitor
+                    </option>
+
+                    <option value="admin">
+                        System Administrator
+                    </option>
+                </select>
+
+            </div>
+
+            <!-- USER ID -->
+            <div class="input-group">
+
+                <label for="uid">
+                    Security Credentials (ID)
+                </label>
+
+                <input
+                    type="text"
+                    id="uid"
+                    class="login-input"
+                    placeholder="Enter User ID"
+                >
+
+            </div>
+
+            <!-- PIN -->
+            <div class="input-group">
+
+                <label for="pwd">
+                    Security Authorization Code
+                </label>
+
+                <input
+                    type="password"
+                    id="pwd"
+                    class="login-input"
+                    placeholder="••••"
+                >
+
+            </div>
+
+            <button
+                type="button"
+                class="login-btn"
+                id="submitAuthBtn"
+            >
+                Authorize System Access
+            </button>
+
+            <!-- DEMO CREDENTIALS -->
+            <div class="creds-tip">
+
+                <strong>Demo Login Credentials</strong>
+                <br><br>
+
+                Parent:
+                <code>MBU-PARENT-2026</code>
+                /
+                <code>9999</code>
+
+                <br>
+
+                Student:
+                <code>MBU-STUDENT-2026</code>
+                /
+                <code>1111</code>
+
+                <br>
+
+                Faculty:
+                <code>MBU-FACULTY-2026</code>
+                /
+                <code>2222</code>
+
+                <br>
+
+                Visitor:
+                <code>MBU-VISITOR-2026</code>
+                /
+                <code>3333</code>
+
+                <br>
+
+                Admin:
+                <code>MBU-ADMIN-2026</code>
+                /
+                <code>4444</code>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <div id="sidebar">
+
+        <header>
+
+            <h1>
+                Campus Horizon AI
+            </h1>
+
+            <span class="badge">
+                MBU Campus Navigation System
+            </span>
+
+        </header>
+
+
+        <!-- NAVIGATION SEARCH -->
+        <section class="card card-accent">
+
+            <h3>
+                Navigation Search
+            </h3>
+
+            <div class="nav-group">
+
+                <input
+                    id="searchInput"
+                    class="login-input"
+                    type="search"
+                    placeholder="Enter room number, for example 201"
+                    autocomplete="off"
+                >
+
+                <button
+                    id="searchBtn"
+                    type="button"
+                    class="login-btn"
+                >
+                    Find Route
+                </button>
+
+                <p
+                    id="searchError"
+                    class="search-error"
+                ></p>
+
+            </div>
+
+
+            <!-- START -->
+            <div class="route-endpoint">
+
+                <h4>
+                    Starting Location
+                </h4>
+
+                <div class="route-selects">
+
+                    <select
+                        id="startFloor"
+                        aria-label="Starting floor"
+                    ></select>
+
+                    <select
+                        id="startBuilding"
+                        aria-label="Starting building"
+                    ></select>
+
+                    <select
+                        id="startRoom"
+                        aria-label="Starting room"
+                        style="grid-column:1/-1"
+                    ></select>
+
+                </div>
+
+            </div>
+
+
+            <!-- DESTINATION -->
+            <div class="route-endpoint">
+
+                <h4>
+                    Destination
+                </h4>
+
+                <div class="route-selects">
+
+                    <select
+                        id="destinationFloor"
+                        aria-label="Destination floor"
+                    ></select>
+
+                    <select
+                        id="destinationBuilding"
+                        aria-label="Destination building"
+                    ></select>
+
+                    <select
+                        id="destinationRoom"
+                        aria-label="Destination room"
+                        style="grid-column:1/-1"
+                    ></select>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="selectRouteBtn"
+                type="button"
+                class="login-btn"
+            >
+                Route Selected Locations
+            </button>
+            <button
+    id="startNavigationBtn"
+    type="button"
+    class="location-action"
+>
+    ▶ Start Navigation
+</button>
+
+            <label class="switch-container">
+                <input
+                    id="wheelchairFilter"
+                    type="checkbox"
+                >
+                Accessible route
+            </label>
+
+
+            <label class="switch-container">
+                <input
+                    id="avoidCrowdFilter"
+                    type="checkbox"
+                >
+                Avoid crowded paths
+            </label>
+
+
+            <label class="switch-container">
+                <input
+                    id="avoidRestrictedFilter"
+                    type="checkbox"
+                >
+                Avoid restricted areas
+            </label>
+
+
+            <label class="switch-container">
+                <input
+                    id="avoidTemporaryFilter"
+                    type="checkbox"
+                >
+                Avoid temporary road closures
+            </label>
+
+        </section>
+
+
+        <!-- CURRENT POSITION -->
+        <section class="card">
+
+            <h3>
+                Current Position
+            </h3>
+
+            <select
+                id="qrSimulate"
+                aria-label="Current position"
+            >
+
+                <option value="node_main_gate_checkpoint">
+                    MBU Main Gate Security Hub
+                </option>
+
+                <option value="node_m_block_front_plaza">
+                    M-Block Main Front Arch Plaza
+                </option>
+
+                <option value="node_canteen_hub">
+                    MBU Central Campus Canteen
+                </option>
+
+            </select>
+
+
+            <button
+                id="useMyLocationBtn"
+                class="location-action"
+                type="button"
+            >
+                Use My Location
+            </button>
+
+
+            <p
+                id="currentPosText"
+                class="small-text"
+            >
+                Current Position:
+                <strong>
+                    MBU Main Gate Security Hub
+                </strong>
+            </p>
+
+        </section>
+
+
+        <!-- CAMPUS BLOCKS -->
+        <section class="card">
+
+            <h3>
+                Campus Blocks, Floors & Rooms
+            </h3>
+
+            <div
+                id="blockDirectory"
+                class="block-directory"
+            ></div>
+
+        </section>
+
+
+        <!-- MAP LAYERS -->
+        <section class="card">
+
+            <h3>
+                Campus Map Layers
+            </h3>
+
+            <div class="map-layers">
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="buildings"
+                        checked
+                    >
+                    Buildings
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="gates"
+                        checked
+                    >
+                    Gates
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="parking"
+                        checked
+                    >
+                    Parking
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="library"
+                        checked
+                    >
+                    Library
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="labs"
+                        checked
+                    >
+                    Labs
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="canteen"
+                        checked
+                    >
+                    Canteen
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="washrooms"
+                        checked
+                    >
+                    Washrooms
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="sports"
+                        checked
+                    >
+                    Sports
+                </label>
+
+
+                <label class="layer-toggle">
+                    <input
+                        type="checkbox"
+                        data-layer="gardens"
+                        checked
+                    >
+                    Gardens
+                </label>
+
+            </div>
+
+        </section>
+
+
+        <!-- ROUTE DETAILS -->
+        <section
+            id="routeDetailsCard"
+            class="card hidden"
+        >
+
+            <h3>
+                Route Details
+            </h3>
+
+            <div class="stat-group">
+                <span>
+                    Distance
+                </span>
+
+                <strong id="pathDist">
+                    -
+                </strong>
+            </div>
+
+
+            <div class="stat-group">
+                <span>
+                    Estimated Time
+                </span>
+
+                <strong id="pathTime">
+                    -
+                </strong>
+            </div>
+
+
+            <h3>
+                Directions
+            </h3>
+
+            <ol
+                id="directionsList"
+                class="directions-list"
+            ></ol>
+
+            <!-- TURN-BY-TURN VOICE NAVIGATION -->
+
+<div id="turnNavigationPanel">
+
+    <h3>🧭 Turn-by-Turn Navigation</h3>
+
+    <div id="turnList">
+        <p class="small-text">
+            Search a room to generate directions.
+        </p>
+    </div>
+
+</div>
+
+
+            <div
+                id="xaiExplanation"
+                class="xai-box"
+            ></div>
+
+
+            <div
+                id="roomMatrixInfo"
+                class="matrix-box"
+            ></div>
+
+        </section>
+
+
+        <!-- ANALYTICS -->
+        <section class="card">
+
+            <h3>
+                Activity Hotspots
+            </h3>
+
+            <div id="analyticsList"></div>
+
+        </section>
+
+
+        <!-- ROOM DIRECTORY -->
+        <section class="card">
+
+            <h3>
+                All Rooms Directory
+            </h3>
+
+            <input
+                id="roomDirectoryFilter"
+                class="login-input"
+                type="search"
+                placeholder="Filter rooms or blocks"
+            >
+
+            <p
+                id="directoryCount"
+                class="directory-count"
+            ></p>
+
+            <ul
+                id="roomDirectoryList"
+                class="directory-list"
+            ></ul>
+
+        </section>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAP
+    ====================================================== -->
+
+    <main id="map-container">
+
+        <div
+            id="map"
+            aria-label="Interactive MBU campus map"
+        ></div>
+
+
+        <div
+            class="map-style-toggle"
+            aria-label="Map style controls"
+        >
+
+            <button
+                class="style-btn active"
+                type="button"
+                data-style="standard"
+            >
+                Standard
+            </button>
+
+
+            <button
+                class="style-btn"
+                type="button"
+                data-style="satellite"
+            >
+                Satellite
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         LEAFLET
+    ====================================================== -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    ></script>
+
+
+    <!-- =====================================================
+         MAIN APPLICATION
+         IMPORTANT:
+         ALL MAP LOGIC IS IN app.js
+    ====================================================== -->
+
+    <script
+        type="module"
+        src="./app.js"
+    ></script>
+
+
+    <!-- =====================================================
+         LOGIN ONLY
+         DO NOT ADD MAP CODE HERE
+    ====================================================== -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                const credentials = {
+
+                    parent: [
+                        "MBU-PARENT-2026",
+                        "9999"
+                    ],
+
+                    student: [
+                        "MBU-STUDENT-2026",
+                        "1111"
+                    ],
+
+                    faculty: [
+                        "MBU-FACULTY-2026",
+                        "2222"
+                    ],
+
+                    visitor: [
+                        "MBU-VISITOR-2026",
+                        "3333"
+                    ],
+
+                    admin: [
+                        "MBU-ADMIN-2026",
+                        "4444"
+                    ]
+
+                };
+
+
+                const loginButton =
+                    document.getElementById(
+                        "submitAuthBtn"
+                    );
+
+
+                const loginError =
+                    document.getElementById(
+                        "loginErrorMsg"
+                    );
+
+
+                loginButton?.addEventListener(
+                    "click",
+                    () => {
+
+                        const role =
+                            document.getElementById(
+                                "userRole"
+                            )?.value;
+
+
+                        const valid =
+                            credentials[role];
+
+
+                        const id =
+                            document.getElementById(
+                                "uid"
+                            )?.value
+                            .trim()
+                            .toUpperCase();
+
+
+                        const pin =
+                            document.getElementById(
+                                "pwd"
+                            )?.value
+                            .trim();
+
+
+                        if (
+                            !valid ||
+                            id !== valid[0] ||
+                            pin !== valid[1]
+                        ) {
+
+                            loginError.textContent =
+                                "Invalid credentials for the selected role.";
+
+                            loginError.style.display =
+                                "block";
+
+                            return;
+                        }
+
+
+                        loginError.style.display =
+                            "none";
+
+
+                        document.getElementById(
+                            "loginOverlay"
+                        ).style.display =
+                            "none";
+
+
+                        /*
+                         * Important:
+                         * Leaflet recalculates the map size
+                         * after the login overlay disappears.
+                         */
+
+                        setTimeout(
+                            () => {
+
+                                window.dispatchEvent(
+                                    new Event("resize")
+                                );
+
+                            },
+                            100
+                        );
+
+                    }
+                );
+
+
+                /*
+                 * Press Enter in PIN field
+                 */
+
+                document.getElementById(
+                    "pwd"
+                )?.addEventListener(
+                    "keydown",
+                    (event) => {
+
+                        if (
+                            event.key === "Enter"
+                        ) {
+
+                            loginButton?.click();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
+</body>
+</html>

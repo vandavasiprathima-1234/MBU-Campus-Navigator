@@ -1,0 +1,655 @@
+:root {
+    --bg-primary: #0f172a;
+    --bg-sidebar: #1e293b;
+    --accent: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+}
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+#sidebar {
+    flex: 0 0 410px;
+    width: 410px;
+    height: 100vh;
+    min-height: 100vh;
+
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 20px;
+    box-sizing: border-box;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    gap: 15px;
+
+    z-index: 1000;
+}
+header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
+.badge { background: #0369a1; padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; font-weight: bold; }
+#map { flex-grow: 1; height: 100%; background: #0b0f19; }
+.card { background: #111827; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.card-accent { border-left: 4px solid var(--accent); }
+h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+.search-box { display: flex; gap: 8px; }
+input, select {
+    flex-grow: 1; background: #1f2937; border: 1px solid var(--border);
+    color: white; padding: 8px; border-radius: 4px; font-size: 0.85rem;
+}
+button {
+    background: var(--accent); color: #0f172a; font-weight: bold;
+    border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;
+}
+button:hover { background: #7dd3fc; }
+.switch-container { display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; cursor: pointer; }
+.xai-box { background: #020617; border-radius: 6px; padding: 10px; font-size: 0.85rem; border: 1px dashed #ef4444; margin: 10px 0; }
+.matrix-box { font-size: 0.8rem; line-height: 1.4; color: #a7f3d0; background: #064e3b; padding: 8px; border-radius: 4px; }
+.hidden { display: none !important; }
+.small-text { font-size: 0.75rem; color: var(--text-muted); margin: 4px 0 0 0; }
+.stat-group { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; }
+.analytics-item { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0; border-bottom: 1px solid #334155; }
+
+/* Authentication Layer Theme */
+.login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.95); z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+}
+.login-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 30px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    text-align: center;
+}
+.login-card h2 { margin: 0 0 5px 0; color: #38bdf8; font-size: 1.6rem; }
+.login-card p { margin: 0; color: #94a3b8; font-size: 0.85rem; }
+/* =========================================================
+   CAMPUS HORIZON MAP
+   ========================================================= */
+
+#map {
+    width: 100%;
+    height: 100vh;
+    min-height: 700px;
+    position: relative;
+    z-index: 1;
+    background: #e8f1e8;
+}
+
+/* Main application layout */
+.app-container,
+.main-container,
+.dashboard-container {
+    min-height: 100vh;
+}
+
+/* Map panel */
+.map-container,
+.map-panel {
+    min-height: 100vh;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Leaflet itself */
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+    min-height: 700px;
+    font-family: Arial, sans-serif;
+    background: #dfeee0;
+}
+
+/* Leaflet controls */
+.leaflet-control-zoom {
+    z-index: 1000 !important;
+}
+
+.leaflet-control-layers {
+    z-index: 1000 !important;
+}
+
+/* GPS button */
+.location-action {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2000;
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+}
+
+.location-action:hover {
+    background: #125ca1;
+}/* =========================================================
+   CAMPUS HORIZON - FINAL MAP DISPLAY FIX
+   ========================================================= */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* LEFT SIDEBAR */
+#sidebar {
+    flex: 0 0 410px;
+    width: 410px;
+    height: 100vh;
+    min-height: 100vh;
+    box-sizing: border-box;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* RIGHT MAP AREA */
+#map-container,
+.map-container,
+.map-panel {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+
+    height: 100vh;
+    min-height: 100vh;
+
+    position: relative;
+    overflow: hidden;
+
+    box-sizing: border-box;
+}
+
+/* ACTUAL LEAFLET MAP */
+#map {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+    min-height: 0;
+
+    z-index: 1;
+}
+
+/* LEAFLET CANVAS */
+#map.leaflet-container {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+/* MAP STYLE BUTTONS */
+.map-style-toggle {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    z-index: 2000;
+}
+
+/* =========================================================
+   BROWSER RESIZE FIX
+   ========================================================= */
+
+@media (min-width: 801px) {
+
+    #sidebar {
+        flex: 0 0 410px;
+    }
+
+    #map-container {
+        flex: 1 1 0;
+        width: auto;
+    }
+
+}
+
+/* =========================================================
+   SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    body {
+        flex-direction: column;
+        overflow: auto;
+    }
+
+    #sidebar {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        max-height: 55vh;
+
+        flex: 0 0 auto;
+    }
+
+    #map-container {
+        width: 100%;
+        height: 45vh;
+        min-height: 400px;
+
+        flex: 0 0 45vh;
+    }
+
+    #map {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+/* =========================================================
+   CAMPUS HORIZON - TURN BY TURN NAVIGATION
+   ========================================================= */
+
+/* Turn-by-turn section */
+
+#turnNavigationPanel {
+    margin-top: 15px;
+    padding: 12px;
+
+    background: #111827;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+
+/* Turn-by-turn heading */
+
+#turnNavigationPanel h3 {
+    margin: 0 0 12px 0;
+
+    color: var(--accent);
+
+    font-size: 0.95rem;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+/* Individual turn */
+
+.turn-row {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 10px;
+
+    margin-bottom: 8px;
+
+    background: #1f2937;
+
+    border: 1px solid #334155;
+
+    border-radius: 7px;
+
+    transition: 0.2s;
+}
+
+
+/* Hover */
+
+.turn-row:hover {
+
+    background: #263449;
+
+    border-color: var(--accent);
+}
+
+
+/* Direction circle */
+
+.turn-icon {
+
+    width: 40px;
+
+    height: 40px;
+
+    min-width: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #1976d2;
+
+    color: white;
+
+    font-size: 21px;
+
+    font-weight: bold;
+}
+
+
+/* Turn text */
+
+.turn-text {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 0;
+}
+
+
+/* Direction */
+
+.turn-direction {
+
+    color: var(--text-main);
+
+    font-size: 0.85rem;
+
+    font-weight: 700;
+}
+
+
+/* Distance */
+
+.turn-distance {
+
+    color: var(--text-muted);
+
+    font-size: 0.75rem;
+}
+
+
+/* Arrival */
+
+.turn-arrival {
+
+    border-color: #22c55e;
+
+    background: #052e16;
+}
+
+
+.turn-arrival .turn-icon {
+
+    background: #16a34a;
+}
+
+
+/* Voice button */
+
+#voiceNavigationBtn {
+
+    width: 100%;
+
+    margin-top: 12px;
+
+    padding: 11px;
+
+    background: #1976d2;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 7px;
+
+    font-size: 0.9rem;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+#voiceNavigationBtn:hover {
+
+    background: #125ca1;
+}
+
+
+/* Navigation active button */
+
+#voiceNavigationBtn.active {
+
+    background: #16a34a;
+}
+
+
+/* Current instruction displayed on map */
+
+#turnInstruction {
+
+    position: absolute;
+
+    top: 20px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 380px;
+
+    min-height: 80px;
+
+    z-index: 3000;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px 18px;
+
+    background: white;
+
+    color: #111827;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 6px 25px rgba(0, 0, 0, 0.30);
+}
+
+
+/* Hide instruction */
+
+#turnInstruction.hidden {
+
+    display: none !important;
+}
+
+
+/* Big direction icon */
+
+#turnIcon {
+
+    width: 55px;
+
+    height: 55px;
+
+    min-width: 55px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #1976d2;
+
+    color: white;
+
+    font-size: 32px;
+
+    font-weight: bold;
+}
+
+
+/* Instruction content */
+
+#turnText {
+
+    font-size: 20px;
+
+    font-weight: 800;
+
+    color: #111827;
+}
+
+
+#turnDistance {
+
+    margin-top: 3px;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    color: #1976d2;
+}
+
+
+#turnDestination {
+
+    margin-top: 3px;
+
+    font-size: 12px;
+
+    color: #64748b;
+}
+
+
+/* GPS navigation status */
+
+#navigationStatus {
+
+    position: absolute;
+
+    top: 115px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 3000;
+
+    padding: 7px 14px;
+
+    border-radius: 20px;
+
+    background: #0f172a;
+
+    color: white;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.25);
+}
+
+
+/* Navigation active status */
+
+#navigationStatus.active {
+
+    background: #166534;
+}
+
+
+/* Mobile */
+
+@media (max-width: 800px) {
+
+    #turnInstruction {
+
+        width: calc(100% - 30px);
+
+        top: 10px;
+
+        padding: 10px 12px;
+    }
+
+    #turnIcon {
+
+        width: 48px;
+
+        height: 48px;
+
+        min-width: 48px;
+
+        font-size: 27px;
+    }
+
+    #turnText {
+
+        font-size: 17px;
+    }
+
+    #turnDistance {
+
+        font-size: 15px;
+    }
+
+    #navigationStatus {
+
+        top: 90px;
+    }
+}

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart Campus Navigator - MBU Master System</title>
+    <!-- Core Leaflet Map Canvas Grid Engine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            /* Professional Natural Eco-Theme Colors */
+            --bg-primary: #f0f4f1;        
+            --bg-sidebar: #e2e8e4;        
+            --accent: #2e7d32;            
+            --accent-hover: #1b5e20;      
+            --text-main: #1e291f;         
+            --text-muted: #556b56;        
+            --border: #cbd5e1;            
+            
+            /* Professional Premium Natural Login Screen Parameters */
+            --login-bg: #eaf0eb;          
+            --login-card-bg: #ffffff;     
+            --login-border: #bdcbd3;      
+            --login-text: #1b3a24;        
+            --login-btn-bg: #2e7d32;      
+            --login-btn-hover: #1b5e20;    
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary); color: var(--text-main); display: flex; overflow: hidden; box-sizing: border-box;
+        }
+        
+        /* SECURE PORTAL CONTROLS INITIAL OVERLAY */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--login-bg); display: flex; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .login-card {
+            background: var(--login-card-bg); border: 1px solid var(--login-border);
+            padding: 28px 30px; border-radius: 12px; width: 100%; max-width: 420px;
+            max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box;
+            box-shadow: 0 10px 25px -5px rgba(46, 125, 50, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); text-align: center;
+        }
+        
+        .login-logo {
+            width: 140px; height: 140px; margin: 0 auto 15px; object-fit: contain; display: block;
+        }
+        .login-logo-mark {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--accent);
+            background: #f4faf5;
+            box-shadow: inset 0 0 0 7px #dceddf, 0 5px 15px rgba(46, 125, 50, 0.14);
+            font-weight: 800;
+            letter-spacing: 1px;
+            font-size: 1.35rem;
+        }
+        .login-logo-name {
+            margin: 0 0 18px;
+            color: var(--login-text);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        
+        .login-card h2 { color: var(--login-text); margin-top: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+        .login-card p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; font-weight: 500; margin-top: 5px; }
+        .input-group { text-align: left; margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+        
+        .login-input {
+            width: 100%; background: #f8faf9; border: 1px solid var(--login-border);
+            color: var(--text-main); padding: 12px; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; transition: border-color 0.15s ease-in-out;
+        }
+        .login-input:focus { border-color: var(--accent); outline: none; background: #ffffff; }
+        
+        /* FIXED SUBMIT BUTTON */
+        .login-btn {
+            width: 100%; background: var(--login-btn-bg); color: white; font-weight: 600;
+            border: none; padding: 14px; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: background 0.15s ease-in-out; margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2); display: block;
+        }
+        .login-btn:hover { background: var(--login-btn-hover); }
+        
+        .error-banner {
+            background: #fff5f5; border: 1px solid #e53935; color: #b71c1c;
+            padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 15px; display: none; text-align: left;
+        }
+        .creds-tip {
+            font-size: 0.75rem; color: var(--text-muted); background: #f1f5f2;
+            padding: 8px; border-radius: 6px; margin-top: 15px; text-align: left; line-height: 1.4;
+        }
+
+        /* SIDEPANEL WORKSPACE PANELS */
+        #sidebar {
+            width: 410px; height: 100%; background: var(--bg-sidebar);
+            border-right: 1px solid var(--border); display: flex; flex-direction: column;
+            padding: 20px; box-sizing: border-box; overflow-y: auto; gap: 15px; z-index: 1000;
+        }
+        header h1 { margin: 0; font-size: 1.35rem; color: var(--accent); font-weight: 700; }
+        .badge { background: #1565c0; color: #ffffff; padding: 4px 10px; font-size: 0.72rem; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 5px; }
+        
+        #map-container { flex: 1 1 auto; min-width: 0; height: 100%; position: relative; background: #e5e9f0; }
+        #map { width: 100%; min-width: 0; height: 100%; z-index: 1; }
+        
+        .map-watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 380px; height: auto; opacity: 0.08; z-index: 999; pointer-events: none; user-select: none;
+        }
+
+        .card { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-accent { border-left: 4px solid var(--accent); }
+        h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nav-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 5px; }
+        .route-endpoint { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+        .route-endpoint h4 { margin: 0 0 7px; font-size: 0.78rem; color: var(--accent); text-transform: uppercase; }
+        .route-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .route-selects select { min-width: 0; padding: 8px; font-size: 0.76rem; }
+        .switch-container { display: block; font-size: 0.85rem; color: var(--text-main); font-weight: 500; margin-top: 8px; cursor: pointer; }
+        .xai-box { background: #fff5f5; border-radius: 6px; padding: 12px; font-size: 0.85rem; border: 1px dashed #e53935; margin: 10px 0; color: #b71c1c; line-height: 1.4; font-weight: 500; }
+        .matrix-box { font-size: 0.85rem; line-height: 1.5; color: #1b5e20; background: #e8f5e9; padding: 12px; border-radius: 6px; border: 1px solid #a5d6a7; font-weight: 500; }
+        .directions-list { margin: 10px 0 0; padding-left: 22px; color: var(--text-main); font-size: 0.85rem; line-height: 1.5; }
+        .directions-list li { margin-bottom: 7px; padding-left: 3px; }
+        .directory-count { font-size: 0.75rem; color: var(--text-muted); margin: 0 0 8px; }
+        .directory-list { max-height: 260px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+        .directory-item { border-top: 1px solid var(--border); padding: 8px 0; font-size: 0.78rem; line-height: 1.35; cursor: pointer; }
+        .directory-item strong { display: block; color: var(--accent); font-size: 0.72rem; text-transform: uppercase; }
+        .hidden { display: none !important; }
+        .small-text { font-size: 0.75rem; color: var(--text-muted); margin: 4px 0 0 0; font-weight: 500; }
+        .stat-group { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; color: var(--text-main); }
+        optgroup { background: #ffffff; color: var(--accent); font-style: normal; font-weight: 700; }
+        option { color: var(--text-main); font-weight: normal; background: #ffffff; }
+        select { width: 100%; background: #f8faf9; border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; outline: none; }
+        select:focus { border-color: var(--accent); }
+        
+        #manualRouteBtn {
+            background: var(--accent); color: white; font-weight: 600; font-size: 0.9rem;
+            border: none; padding: 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s ease;
+            box-shadow: 0 2px 6px rgba(46, 125, 50, 0.15); width: 100%;
+        }
+        #manualRouteBtn:hover { background: var(--accent-hover); }
+        
+        .map-style-toggle {
+            position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+            background: white; border: 1px solid var(--border); padding: 8px;
+            border-radius: 6px; display: flex; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .style-btn { border: none; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border-radius: 4px; cursor: pointer; background: #f1f5f9; color: var(--text-main); }
+        .style-btn.active { background: var(--accent); color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- SECURE COMPREHENSIVE AUTH OVERLAY -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <img class="login-logo" src="./assets/mbu-logo.jfif" alt="Mohan Babu University logo">
+            <h2>MBU Smart Navigation</h2>
+            <p>AI Campus Horizon Navigation Platform Control</p>
+            
+            <div id="loginErrorMsg" class="error-banner"></div>
+            
+            <div class="input-group">
+                <label for="userRole">System Access Role</label>
+                <select id="userRole" class="login-input">
+                    <option value="parent">Parent</option>
+                    <option value="student">Student</option>
+                    <option value="faculty">Faculty Member</option>
+                    <option value="visitor">Campus Visitor</option>
+                    <option value="admin">System Administrator</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="uid">Security Credentials (ID)</label>
+                <input type="text" id="uid" class="login-input" placeholder="e.g., MBU-PARENT-2026">
+            </div>
+            <div class="input-group">
+                <label for="pwd">Security Authorization Code</label>
+                <input type="password" id="pwd" class="login-input" placeholder="••••">
+            </div>
+            
+            <!-- STABLE SUBMIT BUTTON CLICK HANDLER TRIGGER -->
+            <button type="button" class="login-btn" id="submitAuthBtn">
+                Authorize System Access
+            </button>
+            
+            <div class="creds-tip">
+                ℹ️ <strong>System Authorization Logins:</strong><br>
+                • <strong>Parent ID:</strong> <code>MBU-PARENT-2026</code> | <strong>Pin:</strong> <code>9999</code><br>
+                • <strong>Student ID:</strong> <code>MBU-STUDENT-2026</code> | <strong>Pin:</strong> <code>1111</code><br>
+                • <strong>Faculty ID:</strong> <code>MBU-FACULTY-2026</code> | <strong>Pin:</strong> <code>2222</code><br>
+                • <strong>Visitor ID:</strong> <code>MBU-VISITOR-2026</code> | <strong>Pin:</strong> <code>3333</code><br>
+                • <strong>Admin ID:</strong> <code>MBU-ADMIN-2026</code> | <strong>Pin:</strong> <code>4444</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN MONITOR WORKSPACE GRID -->
+    <div id="sidebar">
+        <header>
+            <h1>Campus Horizon AI</h1>
+            <span class="badge">MBU Predictive Analytics Infrastructure</span>
+        </header>
+
+        <section class="card card-accent">
+            <h3>Navigation Search</h3>
+            <div class="nav-group">
+                <input id="searchInput" class="login-input" type="search" placeholder="Enter room number, for example 201" autocomplete="off" inputmode="numeric">
+                <button id="searchBtn" type="button" class="login-btn">Find Route</button>
+            </div>
+            <div class="route-endpoint">
+                <h4>Starting Location</h4>
+                <div class="route-selects">
+                    <select id="startFloor" aria-label="Starting floor"></select>
+                    <select id="startBuilding" aria-label="Starting building"></select>
+                    <select id="startRoom" aria-label="Starting room" style="grid-column: 1 / -1"></select>
+                </div>
+            </div>
+            <div class="route-endpoint">
+                <h4>Destination</h4>
+                <div class="route-selects">
+                    <select id="destinationFloor" aria-label="Destination floor"></select>
+                    <select id="destinationBuilding" aria-label="Destination building"></select>
+                    <select id="destinationRoom" aria-label="Destination room" style="grid-column: 1 / -1"></select>
+                </div>
+            </div>
+            <button id="selectRouteBtn" type="button" class="login-btn">Route Selected Locations</button>
+            <label class="switch-container"><input id="wheelchairFilter" type="checkbox"> Accessible route</label>
+            <label class="switch-container"><input id="avoidCrowdFilter" type="checkbox"> Avoid crowded paths</label>
+        </section>
+
+        <section class="card">
+            <h3>Current Position</h3>
+            <select id="qrSimulate" aria-label="Current position">
+                <option value="node_main_gate_checkpoint">MBU Main Gate Security Hub</option>
+                <option value="node_m_block_front_plaza">M-Block Main Front Arch Plaza</option>
+                <option value="node_canteen_hub">MBU Central Campus Canteen &amp; Cafeteria</option>
+            </select>
+            <p id="currentPosText" class="small-text">Current Position: <strong>MBU Main Gate Security Hub</strong></p>
+        </section>
+
+        <section id="routeDetailsCard" class="card hidden">
+            <h3>Route Details</h3>
+            <div class="stat-group"><span>Distance</span><strong id="pathDist">-</strong></div>
+            <div class="stat-group"><span>Estimated time</span><strong id="pathTime">-</strong></div>
+            <h3>Directions</h3>
+            <ol id="directionsList" class="directions-list"></ol>
+            <div id="xaiExplanation" class="xai-box"></div>
+            <div id="roomMatrixInfo" class="matrix-box"></div>
+        </section>
+
+        <section class="card">
+            <h3>Activity Hotspots</h3>
+            <div id="analyticsList"></div>
+        </section>
+
+        <section class="card">
+            <h3>All Rooms Directory</h3>
+            <input id="roomDirectoryFilter" class="login-input" type="search" placeholder="Filter rooms or blocks" autocomplete="off">
+            <p id="directoryCount" class="directory-count"></p>
+            <ul id="roomDirectoryList" class="directory-list"></ul>
+        </section>
+    </div>
+
+    <main id="map-container">
+        <div id="map" aria-label="Interactive MBU campus map"></div>
+        <div class="map-style-toggle" aria-label="Map style controls">
+            <button class="style-btn active" type="button" data-style="standard">Standard</button>
+            <button class="style-btn" type="button" data-style="satellite">Satellite</button>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
